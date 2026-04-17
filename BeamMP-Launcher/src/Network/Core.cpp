@@ -301,11 +301,12 @@ void Parse(std::string Data, SOCKET CSocket) {
         }
         if (SubCode == 'G') {
             // Do NOT exit launcher process on QG. Treat it like a network-session stop only.
-            debug("Received 'QG' packet -> stopping network session without exiting launcher");
+            debug("Received 'QG' packet -> stopping network session and room services without exiting launcher");
             NetReset();
             Terminate = true;
             TCPTerminate = true;
             ping = -1;
+            RoomHost::StopRoomServerIfRunning();
         }
         Data.clear();
         break;

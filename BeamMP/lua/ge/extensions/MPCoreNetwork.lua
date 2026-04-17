@@ -253,6 +253,12 @@ end
 -- @usage logout() -- Tells the launcher to logout from BeamMP Services
 local function logout()
 	log('M', 'logout', 'Attempting logout')
+	-- Explicitly stop room host/guest services on logout.
+	-- This keeps launcher state clean even if user logs out from menu pages.
+	if launcherConnected then
+		send('H:STOP')
+		send('H:GUEST_STOP')
+	end
 	send('N:LO')
 	loginInProgress = false
 	loggedIn = false
@@ -516,9 +522,11 @@ local function leaveServer(goBack)
 	send('QS') -- Quit session, disconnecting MPCoreNetwork socket is not necessary
 	if launcherConnected then
 		-- Guest-room "Enter Game" sessions pass skipModWarning=true in currentServer.
-		-- For that flow, keep EasyTier guest room alive on connection failure so users can retry.
+		-- Keep guest room alive only during join phase (so failed join can retry),
+		-- but stop it during normal session leave / mission end.
 		local isGuestRoomFlow = currentServer and currentServer.skipModWarning == true
-		if not isGuestRoomFlow then
+		local keepGuestRoomForRetry = isGuestRoomFlow and isGoingMpSession
+		if not keepGuestRoomForRetry then
 			send('H:GUEST_STOP')
 		end
 	end

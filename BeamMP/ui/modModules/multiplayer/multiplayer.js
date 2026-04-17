@@ -1197,6 +1197,8 @@ function($scope, $state, $timeout, $mdDialog, $filter, ConfirmationDialog, toast
 
 	$scope.logout = function() {
 		localStorage.removeItem('beammpOfflineUsername');
+		bngApi.engineLua('MPCoreNetwork.roomHostSend(' + bngApi.serializeToLua('GUEST_STOP') + ')');
+		bngApi.engineLua('MPCoreNetwork.roomHostSend(' + bngApi.serializeToLua('STOP') + ')');
 		bngApi.engineLua(`MPCoreNetwork.logout()`);
 		$state.go('menu.multiplayer.login');
 	}

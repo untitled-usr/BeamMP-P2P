@@ -274,7 +274,18 @@ void StopServerUnlocked() {
 #if defined(_WIN32)
     if (g_hasProc) {
         debug("RoomHost::StopServerUnlocked() terminating server process");
-        TerminateProcess(g_serverProc.hProcess, 1);
+        DWORD pid = GetProcessId(g_serverProc.hProcess);
+        if (pid != 0) {
+            if (GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, pid)) {
+                DWORD w = WaitForSingleObject(g_serverProc.hProcess, 1500);
+                if (w == WAIT_TIMEOUT)
+                    TerminateProcess(g_serverProc.hProcess, 1);
+            } else {
+                TerminateProcess(g_serverProc.hProcess, 1);
+            }
+        } else {
+            TerminateProcess(g_serverProc.hProcess, 1);
+        }
         CloseHandle(g_serverProc.hProcess);
         g_serverProc.hProcess = nullptr;
         g_serverProc.hThread = nullptr;

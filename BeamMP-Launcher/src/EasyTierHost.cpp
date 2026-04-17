@@ -207,7 +207,18 @@ static EtSession& GetSessionUnlocked(const std::string& sessionId) {
 static void stopCoreImpl(EtSession& s) {
 #if defined(_WIN32)
     if (s.hasProc) {
-        TerminateProcess(s.proc.hProcess, 1);
+        DWORD pid = GetProcessId(s.proc.hProcess);
+        if (pid != 0) {
+            if (GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, pid)) {
+                DWORD w = WaitForSingleObject(s.proc.hProcess, 1500);
+                if (w == WAIT_TIMEOUT)
+                    TerminateProcess(s.proc.hProcess, 1);
+            } else {
+                TerminateProcess(s.proc.hProcess, 1);
+            }
+        } else {
+            TerminateProcess(s.proc.hProcess, 1);
+        }
         CloseHandle(s.proc.hProcess);
         s.proc.hProcess = nullptr;
         s.proc.hThread = nullptr;
