@@ -1,0 +1,218 @@
+name: Release Create & Build
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+
+env:
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  CMAKE_BUILD_TYPE: "Release"
+  DEBIAN_FRONTEND: "noninteractive"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    name: Create Release
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: true
+          body: |
+            Files included in this release are:
+            - `BeamMP-Server.$DISTRO.$DISTROVERSION.$ARCH` for linux builds, for example `BeamMP-Server.debian.11.x86_64` for the Debian 11 build for x86_64. All require `liblua5.3` to be installed.
+            - `BeamMP-Server.exe` for the Windows build (x86_64). You need to install the [Visual C++ Redistributables](https://aka.ms/vs/17/release/vc_redist.x64.exe) to run this.
+
+  x86_64-matrix:
+    runs-on: ubuntu-22.04
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - distro: debian
+            version: 12
+          - distro: debian
+            version: 13
+          - distro: ubuntu
+            version: 22.04
+          - distro: ubuntu
+            version: 24.04
+    container:
+      image: ${{ matrix.distro }}:${{ matrix.version }}
+    steps:
+      - name: get-cmake
+        uses: lukka/get-cmake@v3.28.1
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Install git
+        run: |
+          apt-get update -y
+          apt-get install -y git
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: Git config safe directory
+        shell: bash
+        run: bash ./scripts/${{ matrix.distro }}-${{ matrix.version }}/1.5-git-safe.sh
+
+      - name: Install Dependencies
+        run: bash ./scripts/${{ matrix.distro }}-${{ matrix.version }}/1-install-deps.sh
+
+      - name: Create Build Environment
+        run: bash ./scripts/${{ matrix.distro }}-${{ matrix.version }}/2-configure.sh '-DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake'
+
+      - name: Build Server
+        run: bash ./scripts/${{ matrix.distro }}-${{ matrix.version }}/3-build.sh
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          asset_name: BeamMP-Server.${{ matrix.distro }}.${{ matrix.version }}.x86_64
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./bin/BeamMP-Server
+          asset_content_type: application/x-elf
+
+      - name: Upload Debug Info
+        id: upload-debug-info
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          asset_name: debuginfo.${{ matrix.distro }}.${{ matrix.version }}.x86_64
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./bin/BeamMP-Server.debug
+          asset_content_type: application/x-elf
+
+  arm64-matrix:
+    runs-on: ubuntu-22.04-arm
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - distro: debian
+            version: 12
+          - distro: debian
+            version: 13
+          - distro: ubuntu
+            version: 22.04
+          - distro: ubuntu
+            version: 24.04
+    env:
+      VCPKG_DEFAULT_TRIPLET: "arm64-linux"
+      VCPKG_FORCE_SYSTEM_BINARIES: 1
+    container:
+      image: ${{ matrix.distro }}:${{ matrix.version }}
+    steps:
+      - name: get-cmake
+        uses: lukka/get-cmake@v3.28.1
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Install git
+        run: |
+          apt-get update -y
+          apt-get install -y git
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: Git config safe directory
+        shell: bash
+        run: bash ./scripts/${{ matrix.distro }}-${{ matrix.version }}/1.5-git-safe.sh
+
+      - name: Install Dependencies
+        run: bash ./scripts/${{ matrix.distro }}-${{ matrix.version }}/1-install-deps.sh
+
+      - name: Create Build Environment
+        run: bash ./scripts/${{ matrix.distro }}-${{ matrix.version }}/2-configure.sh '-DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake'
+
+      - name: Build Server
+        run: bash ./scripts/${{ matrix.distro }}-${{ matrix.version }}/3-build.sh
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          asset_name: BeamMP-Server.${{ matrix.distro }}.${{ matrix.version }}.arm64
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./bin/BeamMP-Server
+          asset_content_type: application/x-elf
+
+      - name: Upload Debug Info
+        id: upload-debug-info
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          asset_name: debuginfo.${{ matrix.distro }}.${{ matrix.version }}.arm64
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./bin/BeamMP-Server.debug
+          asset_content_type: application/x-elf
+
+  upload-release-files-windows:
+    name: Build and upload Windows Release Files
+    runs-on: windows-latest
+    needs: create-release
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows-static
+    steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: Create Build Environment
+        shell: bash
+        run: ./scripts/windows/1-configure.sh
+
+      - name: Build Server
+        shell: bash
+        run: bash ./scripts/windows/2-build.sh
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./bin/Release/BeamMP-Server.exe
+          asset_name: BeamMP-Server.exe
+          asset_content_type: application/vnd.microsoft.portable-executable

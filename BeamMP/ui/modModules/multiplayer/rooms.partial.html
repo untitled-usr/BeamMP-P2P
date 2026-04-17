@@ -1,0 +1,96 @@
+<!-- 铺满中间栏并接住点击（勿在父级 md-content 上加 position:relative，否则会破坏 login 的 .offset-div） -->
+<div class="beammp-rooms-interactive">
+	<div class="beammp-rooms-interactive-inner">
+		<h2 style="color: #fff; text-shadow: 0 2px 6px #000; font-size: 1.8em;" ng-bind="roomsVm.i18n.title"></h2>
+		<p style="color: rgba(255,255,255,0.9); text-shadow: 0 1px 4px #000;" ng-bind="roomsVm.i18n.hint"></p>
+		<div class="beammp-room-nav-row" style="margin-bottom: 16px; position: relative; z-index: 9999;">
+			<!-- 三重兜底：ng-mousedown + ng-click + 原生 onclick(hash) -->
+			<button type="button" class="beammp-room-nav-btn beammp-room-nav-primary"
+				ng-mousedown="roomsVm.goCreate($event)"
+				ng-click="roomsVm.goCreate($event)"
+				onclick="window.location.hash=((window.location.hash||'').indexOf('#!/')===0?'#!/menu/multiplayer/mproomcreate':'#/menu/multiplayer/mproomcreate');return false;">{{roomsVm.i18n.create}}</button>
+		</div>
+
+		<p style="color: rgba(255,255,255,0.8); margin-top: 12px;" ng-show="!roomsVm.rooms || !roomsVm.rooms.length">{{roomsVm.i18n.empty}}</p>
+
+		<div ng-repeat="r in roomsVm.rooms track by (r.id || $index)" style="margin-bottom: 12px; padding: 14px 16px; background: rgba(0,0,0,0.55); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
+			<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;">
+				<div style="flex: 1 1 300px; min-width: 0; padding-right: 10px;">
+					<h3 style="color: #fff; margin: 0 0 4px 0; font-size: 1.15em; text-shadow: 0 1px 3px #000;">{{r.displayName || r.name || r.id}}</h3>
+					<p style="color: rgba(255,255,255,0.75); margin: 0; font-size: 0.9em;">{{roomsVm.i18n.port}} {{r.port}} — {{r.map}}</p>
+				</div>
+				<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+					<button type="button" ng-if="!roomsVm.isRoomRunning(r.id)" ng-click="roomsVm.startRoom(r.id)" style="padding:6px 14px; border:none; border-radius:4px; background:#4caf50; color:#fff; cursor:pointer;">{{roomsVm.i18n.start}}</button>
+					<button type="button" ng-if="roomsVm.isRoomRunning(r.id)" ng-click="roomsVm.stopRoom()" style="padding:6px 14px; border:none; border-radius:4px; background:#f44336; color:#fff; cursor:pointer;">{{roomsVm.i18n.stop}}</button>
+					<button type="button" class="beammp-room-nav-btn beammp-room-nav-secondary beammp-room-nav-compact" ng-click="roomsVm.goEdit(r.id, $event)">{{roomsVm.i18n.edit}}</button>
+					<button type="button" ng-disabled="!roomsVm.canJoin(r)" ng-click="roomsVm.joinRoom(r)" style="padding:6px 14px; border:none; border-radius:4px; background:#ff6600; color:#fff; cursor:pointer;">{{roomsVm.i18n.join}}</button>
+					<button type="button" ng-click="roomsVm.confirmDelete(r.id)" style="padding:6px 14px; border:none; border-radius:4px; background:rgba(120,40,40,0.95); color:#fff; cursor:pointer;">{{roomsVm.pendingDeleteId === r.id ? roomsVm.i18n.confirmDelete : roomsVm.i18n.delete}}</button>
+				</div>
+			</div>
+			<details ng-if="roomsVm.isRoomRunning(r.id) && r.remoteMultiplayerEnabled" class="beammp-room-et-panel" style="margin-top:8px;">
+				<summary class="beammp-room-et-summary" ng-click="roomsVm.requestHostEtInfo(r)">{{roomsVm.i18n.remoteNodeInfo}}</summary>
+				<div style="padding:8px 10px;">
+					<div style="margin-bottom:8px;">
+						<span ng-repeat="kv in (roomsVm.getHostEtInfo(r) && roomsVm.getHostEtInfo(r).nodeLine1 || []) track by $index"
+							style="display:inline-block; margin:2px 4px 2px 0; padding:2px 8px; background:rgba(255,255,255,0.08); border-radius:12px; color:#fff; font-size:11px;">
+							{{kv.label}}: {{kv.value}}
+						</span>
+					</div>
+					<div style="margin-bottom:8px;" ng-if="roomsVm.getHostEtInfo(r) && roomsVm.getHostEtInfo(r).nodeLine2 && roomsVm.getHostEtInfo(r).nodeLine2.length">
+						<span ng-repeat="kv in roomsVm.getHostEtInfo(r).nodeLine2 track by $index"
+							style="display:inline-block; margin:2px 4px 2px 0; padding:2px 8px; background:rgba(255,255,255,0.08); border-radius:12px; color:#fff; font-size:11px;">
+							{{kv.label}}: {{kv.value}}
+						</span>
+					</div>
+					<div style="color:rgba(255,255,255,0.85); font-size:12px; margin-bottom:8px;">
+						<span style="margin-right:10px;">{{roomsVm.i18n.session}}: host</span>
+						<span style="margin-right:10px;">{{roomsVm.i18n.room}}: {{r.displayName || r.name}}</span>
+						<span>{{roomsVm.i18n.nodeCount}}: {{(roomsVm.getHostEtInfo(r) && roomsVm.getHostEtInfo(r).peers && roomsVm.getHostEtInfo(r).peers.length) || 0}}</span>
+					</div>
+					<div style="overflow:auto;">
+						<table style="width:100%; border-collapse:collapse; color:#fff; font-size:12px;">
+							<thead>
+								<tr style="border-bottom:1px solid rgba(255,255,255,0.18);">
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.virtualIpv4}}</th>
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.hostname}}</th>
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.route}}</th>
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.protocol}}</th>
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.latency}}</th>
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.upload}}</th>
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.download}}</th>
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.loss}}</th>
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.natType}}</th>
+									<th style="text-align:left; padding:4px 6px;">{{roomsVm.i18n.version}}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr ng-repeat="p in ((roomsVm.getHostEtInfo(r) && roomsVm.getHostEtInfo(r).peers) || []) track by $index" style="border-bottom:1px solid rgba(255,255,255,0.08);">
+									<td style="padding:4px 6px;">{{p.virtualIp}}</td>
+									<td style="padding:4px 6px;">{{p.hostname}}</td>
+									<td style="padding:4px 6px;">{{p.route}}</td>
+									<td style="padding:4px 6px;">{{p.protocol}}</td>
+									<td style="padding:4px 6px;">{{p.latency}}</td>
+									<td style="padding:4px 6px;">{{p.up}}</td>
+									<td style="padding:4px 6px;">{{p.down}}</td>
+									<td style="padding:4px 6px;">{{p.loss}}</td>
+									<td style="padding:4px 6px;">{{p.natType}}</td>
+									<td style="padding:4px 6px;">{{p.version}}</td>
+								</tr>
+								<tr ng-if="!roomsVm.getHostEtInfo(r) || !roomsVm.getHostEtInfo(r).peers || !roomsVm.getHostEtInfo(r).peers.length">
+									<td colspan="10" style="padding:6px; color:rgba(255,255,255,0.65);">{{roomsVm.i18n.noNodeData}}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</details>
+		</div>
+	</div>
+</div>
+<style>
+	.beammp-room-et-panel { background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.18); }
+	.beammp-room-et-summary { cursor:pointer; color:#fff; user-select:none; list-style:none; padding:8px 10px; font-size:13px; }
+	.beammp-room-et-summary::-webkit-details-marker { display:none; }
+	.beammp-room-et-summary::before { content:"▶"; display:inline-block; margin-right:8px; }
+	.beammp-room-et-panel[open] .beammp-room-et-summary::before { content:"▼"; }
+</style>

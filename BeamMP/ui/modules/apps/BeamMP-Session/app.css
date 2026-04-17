@@ -1,0 +1,111 @@
+	div#Session {
+		display: -webkit-box;
+		height: 30px;
+	}
+	#quit-button {
+		width: 55px;
+		height: 100%;
+	}
+	.outerDiv {
+		display: flex;
+		width: 100%;
+		justify-content: center;
+		flex-flow: row nowrap;
+	}
+    .info-container {
+        display: flex;
+		flex-flow: row nowrap;
+        height: 100%;
+        flex: 0 1 auto;
+        min-width: 0;
+    }
+    .info-container > .block {
+		min-height: 100%;
+		border: 2px solid rgba(175, 175, 175, 0.45);
+		background-color: rgba(0, 0, 0, 0.25);
+		display: flex;
+		align-items: center;
+		padding: 0px 10px 0px 10px;
+		white-space: nowrap;
+		overflow: hidden;
+		min-width: auto;
+	}
+    .info-container > #server-name-block {
+        flex: 1 1 auto;
+        min-width: 0; 
+    }
+
+    .info-container > .others-block {
+        flex: 0 0 auto; 
+    }
+	#button-block {
+		padding: 0px;
+		margin: 0px;
+	}
+	.multiplayersession .buttons {
+		color: #DDDDDD;
+		border: none;
+		transition: 0.20s;
+		background-color: rgba(0, 0, 0, 0.45);
+		height: 100%;
+	}
+	.multiplayersession .buttons:hover {
+		background-color:rgba(0, 0, 0, 0.65);
+		color: #FFFFFF;
+	}
+	#queue-block {
+		display:inline-block;
+		background-size: 200% 100%;
+		background-image: linear-gradient(to right, rgba(255, 100, 0, 0.8) 50%, transparent 0);
+		background-position: left;
+	}
+
+
+	.color-0 { color: #000000; }
+	.color-1 { color: #0000AA; }
+	.color-2 { color: #00AA00; }
+	.color-3 { color: #00AAAA; }
+	.color-4 { color: #AA0000; }
+	.color-5 { color: #AA00AA; }
+	.color-6 { color: #FFAA00; }
+	.color-7 { color: #AAAAAA; }
+	.color-8 { color: #555555; }
+	.color-9 { color: #5555FF; }
+	.color-a { color: #55FF55; }
+	.color-b { color: #55FFFF; }
+	.color-c { color: #FF5555; }
+	.color-d { color: #FF55FF; }
+	.color-e { color: #FFFF55; }
+	.color-f { color: #FFFFFF; }
+
+	.bold { font-weight: bold; }
+	.line-through { text-decoration: line-through; }
+	.underline { text-decoration: underline; }
+	.italic { font-style: italic; }
+
+
+	.marquee {
+		display: flex;
+		width: max-content;
+		position: relative;
+	}
+	.activate-marquee:hover {
+		animation: scroll-left 10s linear infinite;
+	}
+
+	.session-status {
+		flex-shrink: 0;
+	}
+	.session-status:nth-child(2) {
+		position: absolute;
+		left: 100%;
+		padding-left: 60px;
+	}
+	@keyframes scroll-left {
+	0% {
+		transform: translateX(0%);
+	}
+	100% {
+		transform:translateX(calc(-100% - 60px));
+	}
+	}

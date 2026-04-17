@@ -1,0 +1,94 @@
+<!-- Icons can be found here: https://fonts.google.com/icons?selected=Material+Icons -->
+
+<link type="text/css" rel="stylesheet" href="/ui/modModules/multiplayer/multiplayer.css">
+
+<div id="LoadingServer" style="display: none;">
+  <div id="LoadingBody" style="">
+    <md-button style="right:0; top:0; margin:0;" class="button close-button" ng-class="" ng-click="multiplayer.closeLoadingPopup()"> X </md-button>
+    <h1>{{:: 'ui.multiplayer.connectingToServer' | translate}}</h1>
+    <hr id="loadingstatus-divider"/>
+    <span id="OriginalLoadingStatus" hidden style="height: 0px;"></span>
+    <span id="LoadingStatus" hidden style="height: 0px;">{{multiplayer.loadingStatus}}</span>
+    <div id="mod-download-list" ng-if="multiplayer.downloadingMods.length > 0">
+      <div ng-repeat="mod in multiplayer.downloadingMods" class="mod-download-row" style="align-items: center; margin-bottom: 10px;">
+        <span style="flex: 1;">
+          <code>{{mod.number}} - {{mod.name}}</code>
+          {{ ' - ' }}
+          <span style="color: darkgray;font-size: 0.8em;">{{$index === 0 ? mod.speed : ('ui.multiplayer.download.downloaded' | translate)}}</span>
+        </span>
+        <div style="flex: 2;" ng-if="$index === 0 && mod.progress != 100">
+          <md-progress-linear md-mode="determinate" value="{{mod.progress}}" class="md-accent"></md-progress-linear>
+        </div>
+        <span ng-if="$index != 0" style="color: green; font-size: 1em; margin-left: 10px; float: right;">
+          <md-icon class="material-icons" style="vertical-align: middle;">check_mark</md-icon>
+        </span>
+      </div>
+      <div style="
+      pointer-events: none;
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 70%;
+      background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(109,109,109,1) 100%);
+      "></div>
+    </div>
+  </div>
+</div>
+
+
+<md-content id="back" layout="column">
+
+    <md-toolbar class="md-primary" id="top-bar">
+        <md-list-item layout="row" class="">
+            <h1 class="md-toolbar-tools" style="width:auto;">{{:: 'ui.multiplayer.multiplayer' | translate}}</h1>
+			<!--<md-button id="launcher-connect-button" class="button" ng-click="multiplayer.resetLauncherConnection()">Connect to launcher</md-button>-->
+        </md-list-item>
+    </md-toolbar>
+
+    <div flex layout="row" style="overflow: auto; position: relative;">
+      <div layout="column" layout-fill flex="noshrink" style="min-width: 220px; max-width: 280px; border-right: 1px solid rgba(255,255,255,0.08);">
+      <md-content flex layout="column" id="left-menu" style="overflow-y: auto; min-height: 0;">
+        <md-button id="direct-connect-btn" ng-class="{'md-primary md-raised': (multiplayer.stateName.indexOf('multiplayer.direct') !== -1 || multiplayer.stateName.indexOf('multiplayer.guestRoom') !== -1)}" ui-sref="menu.multiplayer.direct" style="text-align:left;">
+          <md-icon class="material-icons">person</md-icon>
+				  {{multiplayer.i18nDirect.navGuestMode}}
+        </md-button>
+
+        <md-button ng-class="{'md-primary md-raised': multiplayer.isRoomSection()}" ui-sref="menu.multiplayer.rooms" style="text-align:left;">
+          <md-icon class="material-icons">home</md-icon>
+				  {{multiplayer.i18nDirect.navHostMode}}
+        </md-button>
+
+        <md-divider></md-divider>
+
+        <md-button onclick="openExternalLink(`https://github.com/untitled-usr/BeamMP-P2P`)" style="text-align: left;">
+          <img src="local://local/ui/modModules/multiplayer/icons/github-mark.svg" style="width: 25px;vertical-align: middle;"></img>
+          {{:: 'ui.multiplayer.github' | translate}}
+        </md-button>
+
+	    <md-divider></md-divider>
+	    
+	    <div flex style="min-height: 1rem;"></div>
+      
+        <span id="serverlist-profile-name" style="text-align: center; background-color: rgba(0, 0, 0, 0); border-radius: 10px; margin-left: 15px; margin-right: 15px; margin-top: 10px; padding: 2px;"></span>
+        <span id="serverlist-profile-id" style="text-align: center;font-size: 0.9em; line-height: 1.5em; opacity: 0.8; cursor: pointer; margin-top: 6px;"></span>
+      </md-content>
+      <div class="beammp-logout-panel">
+        <md-button ng-click="logout()" class="md-raised md-accent beammp-logout-btn">
+          <md-icon class="material-icons">exit_to_app</md-icon>
+          {{:: 'ui.multiplayer.logout' | translate}}
+        </md-button>
+      </div>
+      </div>
+
+      <div flex style="position: relative; pointer-events: auto; min-width: 0;">
+        <!-- 勿给 ui-view 的 md-content 加 position:relative：login.partial 里 .offset-div 为 absolute，会改包含块导致登录页错位/消失 -->
+        <md-content ui-view class="container beammp-multiplayer-ui-view" style="background: transparent; overflow: auto; pointer-events: auto;"></md-content>
+      </div>
+
+      <div ui-view="edit" layout="column"></div>
+    </div>
+</md-content>
+
+<!-- jQuery -->
+<script>
+  //if (window.module) module = window.module;
+</script>

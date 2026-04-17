@@ -1,0 +1,52 @@
+name: Create Release Zip and SHA-256
+on:
+  release:
+    types:
+      - created
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the code
+      if: ${{ github.event.release.prerelease == false }}
+      uses: actions/checkout@v4
+      with:
+        ref: 'public'
+
+    - name: Check out the code (early-access)
+      if: ${{ github.event.release.prerelease == true }}
+      uses: actions/checkout@v4
+      with:
+        ref: 'early-access'
+
+    - name: Download beamlings.zip from Beamlings repository
+      env: 
+        PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+      run: |
+        echo "$PRIVATE_REPO_TOKEN" | gh auth login --with-token
+        gh release download --pattern "Beamlings.zip" --repo github.com/BeamMP/Beamlings
+      working-directory: ${{ github.workspace }}
+    - name: Unpack beamlings.zip Content
+      run: |
+        unzip -o Beamlings.zip
+      working-directory: ${{ github.workspace }}
+    - name: Zip specific files and folders
+      run: |
+        zip -r BeamMP.zip icons lua mp_locales scripts settings ui vehicles CONTRIBUTING.md CODE_OF_CONDUCT.md LICENSE.md README.md NOTICES.md
+      working-directory: ${{ github.workspace }}
+    - name: Generate SHA-256 hash
+      id: sha256
+      run: |
+        sha256sum BeamMP.zip | awk '{print $1}' > BeamMP.zip.sha256
+      working-directory: ${{ github.workspace }}
+    - name: Upload artifacts
+      run: |
+        curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: application/zip" \
+          --data-binary "@BeamMP.zip" \
+          --url "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=BeamMP.zip"
+        curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: text/plain" \
+          --data-binary "@BeamMP.zip.sha256" \
+          --url "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ github.event.release.id }}/assets?name=BeamMP.zip.sha256"
+      working-directory: ${{ github.workspace }}

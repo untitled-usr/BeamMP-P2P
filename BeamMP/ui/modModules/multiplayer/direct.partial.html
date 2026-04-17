@@ -1,0 +1,176 @@
+<md-content>
+	<div style="background:#2C2F33; padding:0 15px 10px 15px;">
+		<br />
+		<div layout="row" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+			<input type="text" id="directip" name="ip" placeholder="Server IP" value="127.0.0.1" tabindex="1"/>
+			<md-button class="button servers-button" ng-class="" ng-click="multiplayer.pasteClipboardToDirectIP()">{{:: 'ui.multiplayer.pasteFromClipboard' | translate}}</md-button>
+		</div>
+		<input type="text" id="directport" name="port" placeholder="Server Port" value="30814" tabindex="2" style="margin-top:6px;"/>
+		<!--<input type="text" id="nickname" name="nickname" placeholder="Nickname"/>-->
+		<div class="beammp-direct-top-actions" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+			<md-button id="direct-connect-button" class="button" ng-click="multiplayer.directConnect()" tabindex="3" style="margin:0;">{{:: 'ui.multiplayer.connect' | translate}}</md-button>
+			<md-button id="add-fav-button" class="button" ng-click="multiplayer.directConnectFavorite()" tabindex="4" style="margin:0;">{{:: 'ui.multiplayer.favorite' | translate}}</md-button>
+			<md-button class="button" ng-click="multiplayer.goGuestRoomCreate()" tabindex="5" style="margin:0;">{{multiplayer.i18nDirect.newGuestRoomConfig}}</md-button>
+		</div>
+		<md-divider></md-divider>
+	</div>
+	<div style="padding:12px 15px;">
+		<div class="beammp-direct-group">
+			<div class="beammp-direct-summary" ng-click="multiplayer.directRoomsOpen = !multiplayer.directRoomsOpen">
+				<span style="display:inline-block; margin-right:8px;">{{multiplayer.directRoomsOpen ? '\u25BC' : '\u25B6'}}</span>{{multiplayer.i18nDirect.rooms}}
+			</div>
+			<div ng-show="multiplayer.directRoomsOpen" style="padding:10px 12px;">
+				<p style="color:rgba(255,255,255,0.65); margin:0 0 8px 0;" ng-show="!multiplayer.guestRooms.length">{{multiplayer.i18nDirect.noGuestRooms}}</p>
+				<div ng-repeat="r in multiplayer.guestRooms track by r.id" style="padding:8px 10px; background:rgba(255,255,255,0.04); margin-bottom:8px;">
+					<div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+						<div style="min-width:0;">
+						<strong style="color:#fff;" ng-bind="r.displayName || r.name || multiplayer.i18nDirect.rooms"></strong>
+						<div style="font-size:12px; color:rgba(255,255,255,0.6);">{{multiplayer.i18nDirect.port}} {{r.remoteVirtualListenPort || 30814}}
+							<span style="margin-left:8px;">{{multiplayer.i18nDirect.password}}: {{r.remoteRoomPassword ? '\u2714' : '\u2718'}}</span>
+							<span style="margin-left:8px;" ng-if="r.remoteEasyTierPeers">{{multiplayer.i18nDirect.publicNodes}}: {{r.remoteEasyTierPeers}}</span>
+							<span style="margin-left:8px;" ng-if="!r.remoteEasyTierPeers">{{multiplayer.i18nDirect.publicNodes}}: {{multiplayer.i18nDirect.none}}</span>
+						</div>
+						</div>
+						<div style="display:flex; gap:6px; flex-shrink:0;">
+							<md-button class="button beammp-direct-join-btn" ng-disabled="multiplayer.guestStopPending" ng-click="multiplayer.toggleGuestRoomJoin(r)">{{multiplayer.isGuestRoomJoined(r) ? (multiplayer.guestStopPending ? multiplayer.i18nDirect.leaving : multiplayer.i18nDirect.leaveRoom) : multiplayer.i18nDirect.joinRoom}}</md-button>
+							<md-button class="button beammp-direct-enter-btn" ng-disabled="multiplayer.guestStopPending" ng-click="multiplayer.enterGuestRoom(r)">{{multiplayer.i18nDirect.enterGame}}</md-button>
+							<md-button class="button" ng-disabled="multiplayer.guestStopPending" ng-click="multiplayer.goGuestRoomEdit(r.id)">{{multiplayer.i18nDirect.edit}}</md-button>
+							<md-button class="button" ng-disabled="multiplayer.guestStopPending" style="background:rgba(120,40,40,0.95);" ng-click="multiplayer.confirmDelete(r.id)">{{multiplayer.pendingDeleteId === r.id ? multiplayer.i18nDirect.confirmDelete : multiplayer.i18nDirect.delete}}</md-button>
+						</div>
+					</div>
+					<div ng-if="multiplayer.isGuestRoomJoined(r) && multiplayer.getGuestServerInfo(r)" style="margin-top:10px; padding:8px 10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.14); border-radius:4px; color:#fff; font-size:12px;">
+						<div><strong>{{multiplayer.i18nDirect.serverInfo}}</strong></div>
+						<div style="margin-top:4px;">{{multiplayer.i18nDirect.name}}: {{multiplayer.getGuestServerInfo(r).name || multiplayer.i18nDirect.unknown}}</div>
+						<div style="margin-top:2px;">{{multiplayer.i18nDirect.map}}: {{multiplayer.getGuestServerInfo(r).map || multiplayer.i18nDirect.unknown}}</div>
+						<div style="margin-top:2px;">{{multiplayer.i18nDirect.players}}: {{multiplayer.getGuestServerInfo(r).players || '0'}} / {{multiplayer.getGuestServerInfo(r).maxPlayers || '?'}}</div>
+						<div style="margin-top:2px;" ng-if="multiplayer.getGuestServerInfo(r).description">{{multiplayer.i18nDirect.description}}: {{multiplayer.getGuestServerInfo(r).description}}</div>
+						<div style="margin-top:2px;" ng-if="multiplayer.getGuestServerInfo(r).version">{{multiplayer.i18nDirect.version}}: {{multiplayer.getGuestServerInfo(r).version}}</div>
+					</div>
+
+					<div ng-if="multiplayer.isGuestRoomJoined(r)" class="beammp-direct-et-panel" style="margin-top:12px;">
+						<div class="beammp-direct-et-summary" ng-click="multiplayer.toggleGuestEtPanel(r.id); multiplayer.requestGuestEtInfo(r)">
+							<span style="display:inline-block; margin-right:8px;">{{multiplayer.guestEtPanelOpen[r.id] ? '\u25BC' : '\u25B6'}}</span>{{multiplayer.i18nDirect.nodeInfo}}
+						</div>
+						<div ng-show="multiplayer.guestEtPanelOpen[r.id]" style="padding:8px 10px;">
+							<div style="margin-bottom:8px;">
+								<span ng-repeat="kv in (multiplayer.getGuestEtInfo(r) && multiplayer.getGuestEtInfo(r).nodeLine1 || []) track by $index"
+									style="display:inline-block; margin:2px 4px 2px 0; padding:2px 8px; background:rgba(255,255,255,0.08); border-radius:12px; color:#fff; font-size:11px;">
+									{{kv.label}}: {{kv.value}}
+								</span>
+							</div>
+							<div style="margin-bottom:8px;" ng-if="multiplayer.getGuestEtInfo(r) && multiplayer.getGuestEtInfo(r).nodeLine2 && multiplayer.getGuestEtInfo(r).nodeLine2.length">
+								<span ng-repeat="kv in multiplayer.getGuestEtInfo(r).nodeLine2 track by $index"
+									style="display:inline-block; margin:2px 4px 2px 0; padding:2px 8px; background:rgba(255,255,255,0.08); border-radius:12px; color:#fff; font-size:11px;">
+									{{kv.label}}: {{kv.value}}
+								</span>
+							</div>
+							<div style="color:rgba(255,255,255,0.85); font-size:12px; margin-bottom:8px;">
+								<span style="margin-right:10px;">{{multiplayer.i18nDirect.session}}: guest</span>
+								<span style="margin-right:10px;">{{multiplayer.i18nDirect.room}}: {{r.displayName || r.name}}</span>
+								<span>{{multiplayer.i18nDirect.nodeCount}}: {{(multiplayer.getGuestEtInfo(r) && multiplayer.getGuestEtInfo(r).peers && multiplayer.getGuestEtInfo(r).peers.length) || 0}}</span>
+							</div>
+							<div style="overflow:auto;">
+								<table style="width:100%; border-collapse:collapse; color:#fff; font-size:12px;">
+									<thead>
+										<tr style="border-bottom:1px solid rgba(255,255,255,0.18);">
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.virtualIpv4}}</th>
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.hostname}}</th>
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.route}}</th>
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.protocol}}</th>
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.latency}}</th>
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.upload}}</th>
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.download}}</th>
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.loss}}</th>
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.natType}}</th>
+											<th style="text-align:left; padding:4px 6px;">{{multiplayer.i18nDirect.version}}</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr ng-repeat="p in ((multiplayer.getGuestEtInfo(r) && multiplayer.getGuestEtInfo(r).peers) || []) track by $index" style="border-bottom:1px solid rgba(255,255,255,0.08);">
+											<td style="padding:4px 6px;">{{p.virtualIp}}</td>
+											<td style="padding:4px 6px;">{{p.hostname}}</td>
+											<td style="padding:4px 6px;">{{p.route}}</td>
+											<td style="padding:4px 6px;">{{p.protocol}}</td>
+											<td style="padding:4px 6px;">{{p.latency}}</td>
+											<td style="padding:4px 6px;">{{p.up}}</td>
+											<td style="padding:4px 6px;">{{p.down}}</td>
+											<td style="padding:4px 6px;">{{p.loss}}</td>
+											<td style="padding:4px 6px;">{{p.natType}}</td>
+											<td style="padding:4px 6px;">{{p.version}}</td>
+										</tr>
+										<tr ng-if="!multiplayer.getGuestEtInfo(r) || !multiplayer.getGuestEtInfo(r).peers || !multiplayer.getGuestEtInfo(r).peers.length">
+											<td colspan="10" style="padding:6px; color:rgba(255,255,255,0.65);">{{multiplayer.i18nDirect.noNodeData}}</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="beammp-direct-group" style="margin-top:10px;">
+			<div class="beammp-direct-summary" ng-click="multiplayer.directServersOpen = !multiplayer.directServersOpen">
+				<span style="display:inline-block; margin-right:8px;">{{multiplayer.directServersOpen ? '\u25BC' : '\u25B6'}}</span>{{multiplayer.i18nDirect.servers}}
+			</div>
+			<div ng-show="multiplayer.directServersOpen" style="padding:10px 12px;">
+				<p style="color:rgba(255,255,255,0.65); margin:0 0 8px 0;" ng-show="!multiplayer.savedServers.length">{{multiplayer.i18nDirect.noServers}}</p>
+				<div ng-repeat="s in multiplayer.savedServers track by s.id" style="padding:8px 10px; background:rgba(255,255,255,0.04); margin-bottom:8px;">
+					<div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+						<div style="min-width:0;">
+							<strong style="color:#fff;" ng-bind="s.displayName || s.name || (s.serverIp + ':' + s.port)"></strong>
+							<div style="font-size:12px; color:rgba(255,255,255,0.6);" ng-bind="(s.serverIp || '127.0.0.1') + ':' + (s.port || 30814)"></div>
+						</div>
+						<div style="display:flex; gap:6px; flex-shrink:0;">
+							<md-button class="button" ng-click="multiplayer.connectSavedServer(s)">{{multiplayer.i18nDirect.connect}}</md-button>
+							<md-button class="button" ng-click="multiplayer.beginEditSavedServer(s)">{{multiplayer.i18nDirect.edit}}</md-button>
+							<md-button class="button" style="background:rgba(120,40,40,0.95);" ng-click="multiplayer.confirmDelete(s.id)">{{multiplayer.pendingDeleteId === s.id ? multiplayer.i18nDirect.confirmDelete : multiplayer.i18nDirect.delete}}</md-button>
+						</div>
+					</div>
+					<div ng-if="multiplayer.isEditingSavedServer(s)" style="margin-top:8px; padding:8px 10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.14);">
+						<label style="display:block; color:#fff; font-size:12px; margin-bottom:4px;">{{multiplayer.i18nDirect.serverNote}}</label>
+						<input type="text" ng-model="multiplayer.savedServerEditForm.displayName" maxlength="128" style="margin-bottom:8px;" />
+						<div>
+							<div style="margin-bottom:8px;">
+								<label style="display:block; color:#fff; font-size:12px; margin-bottom:4px;">{{multiplayer.i18nDirect.ip}}</label>
+								<input type="text" ng-model="multiplayer.savedServerEditForm.serverIp" maxlength="128" />
+							</div>
+							<div style="width:140px;">
+								<label style="display:block; color:#fff; font-size:12px; margin-bottom:4px;">{{multiplayer.i18nDirect.portShort}}</label>
+								<input type="number" ng-model="multiplayer.savedServerEditForm.port" min="1" max="65535" style="display:block; width:100%; box-sizing:border-box; margin:0;" />
+							</div>
+						</div>
+						<div style="display:flex; gap:6px; margin-top:8px;">
+							<md-button class="button" ng-click="multiplayer.saveEditedSavedServer(s)">{{multiplayer.i18nDirect.save}}</md-button>
+							<md-button class="button" ng-click="multiplayer.cancelEditSavedServer()">{{multiplayer.i18nDirect.cancel}}</md-button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<style>
+		.beammp-direct-group { background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.2); }
+		.beammp-direct-summary { cursor:pointer; color:#fff; user-select:none; padding:10px 12px; }
+		.beammp-direct-et-panel { background:rgba(0,0,0,0.16); border:1px solid rgba(255,255,255,0.15); }
+		.beammp-direct-et-summary { cursor:pointer; color:#fff; user-select:none; padding:8px 10px; font-size:13px; }
+		.beammp-direct-join-btn {
+			width:auto !important;
+			min-width:108px;
+			padding-left:14px;
+			padding-right:14px;
+			white-space:nowrap;
+			flex:0 0 auto;
+		}
+		.beammp-direct-enter-btn {
+			width:auto !important;
+			min-width:0;
+			padding-left:14px;
+			padding-right:14px;
+			white-space:nowrap;
+			flex:0 0 auto;
+		}
+	</style>
+
+</md-content>

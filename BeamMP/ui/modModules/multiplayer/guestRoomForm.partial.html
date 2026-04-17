@@ -1,0 +1,53 @@
+<md-content>
+	<div style="background:#2C2F33; padding:20px 24px;">
+		<h2 style="margin:0 0 6px 0; color:#fff;" ng-bind="guestRoomFormVm.isEdit ? guestRoomFormVm.i18n.titleEdit : guestRoomFormVm.i18n.titleCreate"></h2>
+		<p style="margin:0 0 16px 0; color:rgba(255,255,255,0.65);" ng-bind="guestRoomFormVm.i18n.hint"></p>
+
+		<label style="display:block; margin-bottom:2px; color:#fff;" ng-bind="guestRoomFormVm.i18n.roomName"></label>
+		<input type="text" ng-model="guestRoomFormVm.form.displayName" maxlength="64" tabindex="1" />
+
+		<label style="display:block; margin:10px 0 2px 0; color:#fff;" ng-bind="guestRoomFormVm.i18n.roomPassword"></label>
+		<input type="text" ng-model="guestRoomFormVm.form.remoteRoomPassword" autocomplete="off" maxlength="256" tabindex="2" />
+
+		<label style="display:block; margin:10px 0 2px 0; color:#fff;" ng-bind="guestRoomFormVm.i18n.rpcPortal"></label>
+		<input type="text" ng-model="guestRoomFormVm.form.remoteEasyTierRpcPortal" maxlength="160" tabindex="3" />
+
+		<label style="display:block; margin:10px 0 2px 0; color:#fff;" ng-bind="guestRoomFormVm.i18n.virtualPort"></label>
+		<input type="text" ng-model="guestRoomFormVm.form.remoteVirtualListenPort" tabindex="4" />
+
+		<label style="display:block; margin:10px 0 2px 0; color:#fff; font-size:12px; line-height:1.35;" ng-bind="guestRoomFormVm.i18n.publicNodes"></label>
+		<input type="text" class="beammp-public-nodes-input" ng-model="guestRoomFormVm.form.remoteEasyTierPeers" maxlength="4096" tabindex="5" ng-attr-placeholder="{{guestRoomFormVm.i18n.publicNodesPlaceholder}}" />
+
+		<details class="beammp-advanced-panel" style="margin-top:14px;">
+			<summary class="beammp-remote-summary" style="height:34px; font-size:13px;" ng-bind="guestRoomFormVm.i18n.advanced"></summary>
+			<div style="padding:10px 12px;">
+				<div class="beammp-et-options-grid">
+					<label class="beammp-room-chk-label beammp-et-option" ng-repeat="opt in guestRoomFormVm.etOptions track by opt.model" ng-attr-title="{{opt.title}}">
+						<input type="checkbox" class="beammp-room-chk" ng-model="guestRoomFormVm.form[opt.model]" /> {{opt.label}}
+					</label>
+				</div>
+			</div>
+		</details>
+
+		<style>
+			.beammp-room-chk { width:16px; height:16px; margin:0 !important; padding:0 !important; flex-shrink:0; vertical-align:middle; }
+			.beammp-room-chk-label { cursor:pointer; display:flex; flex-direction:row; align-items:center; gap:8px; margin:0; padding:2px 0; color:#fff; font-size:14px; line-height:1.3; }
+			.beammp-public-nodes-input { font-size:12px; }
+			.beammp-public-nodes-input::placeholder { font-size:11px; }
+			.beammp-advanced-panel { width:100%; background:rgba(0,0,0,0.18); border:1px solid rgba(255,255,255,0.35); border-radius:2px; color:#fff; box-sizing:border-box; }
+			.beammp-remote-summary { cursor:pointer; user-select:none; list-style:none; display:flex; align-items:center; padding:0 14px; box-sizing:border-box; }
+			.beammp-remote-summary::-webkit-details-marker { display:none; }
+			.beammp-advanced-panel .beammp-remote-summary::before { content:"▶"; margin-right:8px; }
+			.beammp-advanced-panel[open] .beammp-remote-summary::before { content:"▼"; }
+			.beammp-et-options-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:6px 16px; align-items:start; }
+			.beammp-et-option { min-width:0; align-items:flex-start; white-space:normal; }
+			.beammp-et-option .beammp-room-chk { margin-top:2px !important; }
+		</style>
+
+		<md-divider style="margin-top:12px;"></md-divider>
+		<div style="margin-top:14px;">
+			<md-button class="button" ng-click="guestRoomFormVm.submit()" tabindex="6" ng-bind="guestRoomFormVm.i18n.save"></md-button>
+			<md-button class="button" ng-click="guestRoomFormVm.goBack()" tabindex="7" style="background:rgba(80,80,80,0.95);" ng-bind="guestRoomFormVm.i18n.cancel"></md-button>
+		</div>
+	</div>
+</md-content>

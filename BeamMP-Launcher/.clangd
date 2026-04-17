@@ -1,0 +1,7 @@
+# For clangd in Cursor/VS Code: vcpkg headers are under build/vcpkg_installed/<triplet>/include
+# If your triplet is not x64-windows-static, change the second -I path to match build/vcpkg_installed/*/
+CompileFlags:
+  Add:
+    - -std=c++20
+    - -Iinclude
+    - -Ibuild/vcpkg_installed/x64-windows-static/include

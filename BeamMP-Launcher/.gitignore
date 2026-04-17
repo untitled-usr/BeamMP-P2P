@@ -1,0 +1,15 @@
+cmake-build-debug
+cmake-build-release
+/.idea/
+*.log
+/*.sh
+/*.obj
+/*.exe
+.cache/
+.https_debug/
+Launcher.cfg
+Resources/
+bin/
+compile_commands.json
+key
+out/
